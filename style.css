@@ -92,6 +92,25 @@ button:hover {
   margin-bottom: 15px;
 }
 
+#clear-all {
+  background-color: #ff4d4d;
+  margin-bottom: 15px;
+  margin-right: 10px;
+}
+
+#clear-all:hover {
+  background-color: #cc0000;
+}
+
+#export {
+  background-color: #28a745;
+  margin-bottom: 15px;
+}
+
+#export:hover {
+  background-color: #1e7e34;
+}
+
 #transaction-list {
   list-style: none;
   padding: 0;
@@ -107,11 +126,23 @@ button:hover {
 }
 
 #transaction-list button {
-  background-color: red;
   padding: 6px 10px;
+  margin-left: 5px;
 }
 
-#transaction-list button:hover {
+#transaction-list button:first-child {
+  background-color: orange;
+}
+
+#transaction-list button:first-child:hover {
+  background-color: darkorange;
+}
+
+#transaction-list button:last-child {
+  background-color: red;
+}
+
+#transaction-list button:last-child:hover {
   background-color: darkred;
 }
 

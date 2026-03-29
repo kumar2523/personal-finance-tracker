@@ -6,9 +6,12 @@ const categoryInput = document.getElementById("category");
 const dateInput = document.getElementById("date");
 const transactionList = document.getElementById("transaction-list");
 const filterInput = document.getElementById("filter");
+const clearAllBtn = document.getElementById("clear-all");
+const exportBtn = document.getElementById("export");
 
 let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
 let chart;
+let editId = null;
 
 displayTransactions();
 updateSummary();
@@ -34,7 +37,7 @@ form.addEventListener("submit", function (e) {
   }
 
   const transaction = {
-    id: Date.now(),
+    id: editId ? editId : Date.now(),
     title: title,
     amount: amount,
     type: type,
@@ -42,7 +45,18 @@ form.addEventListener("submit", function (e) {
     date: date
   };
 
-  transactions.push(transaction);
+  if (editId) {
+    transactions = transactions.map(function (t) {
+      if (t.id === editId) {
+        return transaction;
+      }
+      return t;
+    });
+    editId = null;
+  } else {
+    transactions.push(transaction);
+  }
+
   saveToLocalStorage();
   displayTransactions();
   updateSummary();
@@ -52,6 +66,36 @@ form.addEventListener("submit", function (e) {
 
 filterInput.addEventListener("change", function () {
   displayTransactions();
+});
+
+clearAllBtn.addEventListener("click", function () {
+  transactions = [];
+  editId = null;
+  saveToLocalStorage();
+  displayTransactions();
+  updateSummary();
+  updateChart();
+});
+
+exportBtn.addEventListener("click", function () {
+  if (transactions.length === 0) {
+    alert("No data to export");
+    return;
+  }
+
+  let csvContent = "Title,Amount,Type,Category,Date\n";
+
+  transactions.forEach(function (t) {
+    csvContent += `${t.title},${t.amount},${t.type},${t.category},${t.date}\n`;
+  });
+
+  const blob = new Blob([csvContent], { type: "text/csv" });
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.setAttribute("href", url);
+  a.setAttribute("download", "transactions.csv");
+  a.click();
 });
 
 function displayTransactions() {
@@ -68,27 +112,45 @@ function displayTransactions() {
   filteredTransactions.forEach(function (transaction) {
     const li = document.createElement("li");
 
-    li.style.display = "flex";
-    li.style.justifyContent = "space-between";
-    li.style.alignItems = "center";
-
     const color = transaction.type === "income" ? "green" : "red";
 
     li.innerHTML = `
       <span style="color:${color}">
         ${transaction.title} - ₹${transaction.amount} - ${transaction.category} - ${transaction.date}
       </span>
-      <button onclick="deleteTransaction(${transaction.id})">Delete</button>
+      <div>
+        <button onclick="editTransaction(${transaction.id})">Edit</button>
+        <button onclick="deleteTransaction(${transaction.id})">Delete</button>
+      </div>
     `;
 
     transactionList.appendChild(li);
   });
 }
 
+function editTransaction(id) {
+  const t = transactions.find(function (item) {
+    return item.id === id;
+  });
+
+  titleInput.value = t.title;
+  amountInput.value = t.amount;
+  typeInput.value = t.type;
+  categoryInput.value = t.category;
+  dateInput.value = t.date;
+
+  editId = id;
+}
+
 function deleteTransaction(id) {
   transactions = transactions.filter(function (t) {
     return t.id !== id;
   });
+
+  if (editId === id) {
+    editId = null;
+    form.reset();
+  }
 
   saveToLocalStorage();
   displayTransactions();
